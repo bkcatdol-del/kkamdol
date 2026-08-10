@@ -7,12 +7,21 @@ alter table public.events
 alter table public.events
   add column if not exists link_url text;
 
--- Expose heart + link through the public view.
-create or replace view public.events_public
+-- Column-level SELECT grant for the new columns (anon reads base-table columns
+-- through the security_invoker view, so it needs these explicitly — matching
+-- the pattern in 0002_rls.sql). Without this, reads fail with "permission
+-- denied for column heart".
+grant select (heart, link_url) on public.events to anon, authenticated;
+
+-- Expose heart + link through the public view. Drop + recreate (create-or-
+-- replace cannot insert columns in the middle) and re-grant SELECT.
+drop view if exists public.events_public;
+create view public.events_public
   with (security_invoker = true) as
   select id, title, body, event_date, author_nick, heart, link_url, status,
          report_count, created_at, updated_at
   from public.events;
+grant select on public.events_public to anon, authenticated;
 
 -- Recreate create_event with an optional p_heart (default 💙). Drop the old
 -- 6-arg version first so calls resolve unambiguously; existing 6-arg callers
