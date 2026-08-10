@@ -107,7 +107,7 @@ async function main() {
       cells.push(`
         <button class="${cls}" data-key="${key}">
           <span class="d">${d}</span>
-          ${count ? `<span class="dot" title="${count}건">${count > 3 ? "•••" : "•".repeat(count)}</span>` : ""}
+          ${count ? `<span class="dot" title="${count}건">${count > 3 ? `💙 ${count}` : "💙".repeat(count)}</span>` : ""}
         </button>`);
     }
     gridEl.innerHTML = cells.join("");
