@@ -47,7 +47,17 @@ function renderUnlockChip(): void {
   }
 }
 
+/** Keep the whole site out of search engines (noindex on every page). */
+function applyNoIndex(): void {
+  if (document.querySelector('meta[name="robots"]')) return;
+  const meta = document.createElement("meta");
+  meta.name = "robots";
+  meta.content = "noindex, nofollow";
+  document.head.appendChild(meta);
+}
+
 export async function mountChrome(active: string): Promise<void> {
+  applyNoIndex();
   await captureMagicLink();
   await captureAdminMagicLink();
 
