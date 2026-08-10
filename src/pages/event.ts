@@ -59,23 +59,74 @@ async function main() {
   const mediaWrap = document.getElementById("ev-media")!;
   for (const m of media) mediaWrap.appendChild(renderMediaCard(m));
 
-  document.getElementById("ev-edit")?.addEventListener("click", async () => {
-    const title = prompt("제목 수정", ev.title);
-    if (title === null) return;
-    const body = prompt("내용 수정", ev.body ?? "");
-    if (body === null) return;
-    const pw = prompt("이 이벤트의 비밀번호를 입력하세요");
-    if (!pw) return;
-    const ok = await updateEvent(ev.id, pw, {
-      title: title.trim(),
-      body: body.trim(),
-      eventDate: ev.event_date,
-    }).catch(() => false);
-    if (ok) {
-      toast("수정했어요");
-      setTimeout(() => location.reload(), 600);
-    } else toast("비밀번호가 일치하지 않아요.", "err");
-  });
+  document.getElementById("ev-edit")?.addEventListener("click", renderEditForm);
+
+  function renderEditForm() {
+    if (!ev) return;
+    let heart = ev.heart || "💙";
+    content.innerHTML = `
+      <form class="glass" style="padding:24px;max-width:640px">
+        <a href="#" id="edit-cancel-top" style="font-size:13px">← 취소</a>
+        <h1 class="page-title" style="margin-top:10px">글 수정</h1>
+        <label>제목 *</label>
+        <input name="title" maxlength="200" value="${escapeHTML(ev.title)}" required />
+        <div class="field-row">
+          <div><label>날짜</label><input name="event_date" type="date" value="${ev.event_date ?? ""}" /></div>
+          <div><label>하트</label>
+            <div class="heart-pick">
+              ${["🖤", "💙"]
+                .map(
+                  (h) =>
+                    `<button type="button" class="heart-opt${h === (ev.heart || "💙") ? " on" : ""}" data-heart="${h}">${h}</button>`
+                )
+                .join("")}
+            </div>
+          </div>
+        </div>
+        <label>내용</label>
+        <textarea name="body" maxlength="5000" style="min-height:160px">${escapeHTML(ev.body ?? "")}</textarea>
+        <label>링크 (선택)</label>
+        <input name="link" type="url" maxlength="500" value="${escapeHTML(ev.link_url ?? "")}" placeholder="https://..." />
+        <label>비밀번호 * <span class="hint" style="display:inline">작성 시 정한 비번</span></label>
+        <input name="password" type="password" maxlength="72" required />
+        <div style="margin-top:20px;display:flex;gap:10px">
+          <button class="btn btn--primary" type="submit">저장</button>
+          <button class="btn btn--ghost" type="button" id="edit-cancel">취소</button>
+        </div>
+      </form>`;
+
+    const form = content.querySelector("form") as HTMLFormElement;
+    content.querySelectorAll(".heart-opt").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        heart = (btn as HTMLElement).dataset.heart!;
+        content.querySelectorAll(".heart-opt").forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+      })
+    );
+    const cancel = (e?: Event) => {
+      e?.preventDefault();
+      location.reload();
+    };
+    document.getElementById("edit-cancel")?.addEventListener("click", cancel);
+    document.getElementById("edit-cancel-top")?.addEventListener("click", cancel);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const title = String(fd.get("title") ?? "").trim();
+      const body = String(fd.get("body") ?? "").trim();
+      const eventDate = String(fd.get("event_date") ?? "") || null;
+      const link = String(fd.get("link") ?? "").trim();
+      const pw = String(fd.get("password") ?? "");
+      if (!title) return toast("제목을 입력해 주세요.", "err");
+      if (!pw) return toast("비밀번호를 입력해 주세요.", "err");
+      const ok = await updateEvent(ev.id, pw, { title, body, eventDate, heart, link }).catch(() => false);
+      if (ok) {
+        toast("수정했어요");
+        setTimeout(() => location.reload(), 600);
+      } else toast("비밀번호가 일치하지 않아요.", "err");
+    });
+  }
 
   document.getElementById("ev-report")?.addEventListener("click", async () => {
     await reportContent("event", ev.id).catch(() => {});

@@ -7,7 +7,7 @@ import { errorText } from "../components/comments";
 import { checkText } from "../lib/validation";
 import { url, toast, notConfiguredNotice, getParam } from "../lib/dom";
 
-const HEARTS = ["💙", "🖤"];
+const HEARTS = ["🖤", "💙"];
 
 function prefillDate(): string {
   const d = getParam("date") ?? "";

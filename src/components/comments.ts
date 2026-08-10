@@ -93,13 +93,27 @@ function renderComment(c: CommentRow, reload: () => Promise<void>): HTMLElement 
       ${isAdmin ? `<button data-act="admin-del" style="color:var(--danger)">관리자 삭제</button>` : ""}
     </div>`;
 
-  el.querySelector('[data-act="edit"]')?.addEventListener("click", async () => {
-    const next = prompt("댓글을 수정하세요", c.body);
-    if (next === null || next.trim() === "" || next === c.body) return;
-    const pw = prompt("이 댓글의 비밀번호를 입력하세요");
-    if (!pw) return;
-    const ok = await updateComment(c.id, pw, next.trim()).catch(() => false);
-    ok ? (toast("수정했어요"), reload()) : toast("비밀번호가 일치하지 않아요.", "err");
+  el.querySelector('[data-act="edit"]')?.addEventListener("click", () => {
+    el.innerHTML = `
+      <div class="top"><span class="nick">${escapeHTML(c.author_nick)}</span></div>
+      <textarea class="edit-body" maxlength="2000" style="margin-top:8px">${escapeHTML(c.body)}</textarea>
+      <div class="field-row" style="margin-top:8px">
+        <input class="edit-pw" type="password" maxlength="72" placeholder="비밀번호" />
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn--sm btn--primary edit-save" type="button">저장</button>
+          <button class="btn btn--sm btn--ghost edit-cancel" type="button">취소</button>
+        </div>
+      </div>`;
+    (el.querySelector(".edit-body") as HTMLTextAreaElement).focus();
+    el.querySelector(".edit-cancel")?.addEventListener("click", reload);
+    el.querySelector(".edit-save")?.addEventListener("click", async () => {
+      const next = (el.querySelector(".edit-body") as HTMLTextAreaElement).value.trim();
+      const pw = (el.querySelector(".edit-pw") as HTMLInputElement).value;
+      if (!next) return toast("내용을 입력해 주세요.", "err");
+      if (!pw) return toast("비밀번호를 입력해 주세요.", "err");
+      const ok = await updateComment(c.id, pw, next).catch(() => false);
+      ok ? (toast("수정했어요"), reload()) : toast("비밀번호가 일치하지 않아요.", "err");
+    });
   });
 
   el.querySelector('[data-act="del"]')?.addEventListener("click", async () => {

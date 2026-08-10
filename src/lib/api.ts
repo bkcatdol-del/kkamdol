@@ -192,7 +192,7 @@ export async function deleteEvent(id: string, password: string): Promise<boolean
 export async function updateEvent(
   id: string,
   password: string,
-  input: { title: string; body: string; eventDate: string | null }
+  input: { title: string; body: string; eventDate: string | null; heart?: string; link?: string }
 ): Promise<boolean> {
   const { data, error } = await supabase.rpc("update_event", {
     p_id: id,
@@ -200,6 +200,8 @@ export async function updateEvent(
     p_title: input.title,
     p_body: input.body,
     p_event_date: input.eventDate,
+    p_heart: input.heart ?? null,
+    p_link: input.link ?? null,
   });
   if (error) throw error;
   return data === true;
