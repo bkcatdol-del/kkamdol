@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>깜돌 kkamdol</title>
+    <script>
+      // Send unknown paths back to the archive home, preserving the base path.
+      var parts = location.pathname.split("/").filter(Boolean);
+      var base = parts.length ? "/" + parts[0] + "/" : "/";
+      location.replace(base);
+    </script>
+  </head>
+  <body></body>
+</html>
