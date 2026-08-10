@@ -150,6 +150,30 @@ export async function createMedia(
   return data as string;
 }
 
+export interface BulkRow {
+  title: string;
+  body: string;
+  event_date: string; // YYYY-MM-DD or ""
+  heart: string;
+  link: string;
+}
+
+export async function createEventsBulk(
+  code: string,
+  nick: string,
+  password: string,
+  rows: BulkRow[]
+): Promise<number> {
+  const { data, error } = await supabase.rpc("create_events_bulk", {
+    p_code: code,
+    p_nick: nick,
+    p_password: password,
+    p_rows: rows,
+  });
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
+
 export async function createComment(
   code: string,
   input: { eventId?: string; mediaId?: string; nick: string; password: string; body: string }

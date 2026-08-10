@@ -17,6 +17,7 @@ export default defineConfig({
         event: resolve(__dirname, "event.html"),
         upload: resolve(__dirname, "upload.html"),
         "new-event": resolve(__dirname, "new-event.html"),
+        import: resolve(__dirname, "import.html"),
         admin: resolve(__dirname, "admin.html"),
       },
     },

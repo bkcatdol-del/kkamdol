@@ -48,6 +48,7 @@ async function main() {
         <button class="btn btn--primary" type="submit">기록 남기기</button>
         <a class="btn btn--ghost" href="${url("index.html")}">취소</a>
       </div>
+      <p class="hint" style="margin-top:14px">여러 개를 한 번에? <a href="${url("import.html")}">📄 엑셀/CSV 대량 등록</a></p>
     </form>`;
 
   const form = content.querySelector("form") as HTMLFormElement;

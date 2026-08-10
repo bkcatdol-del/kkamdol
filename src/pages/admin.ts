@@ -27,9 +27,10 @@ async function main() {
       <h3 style="margin-top:0">삭제 · 숨김</h3>
       <p class="hint">타임라인·갤러리·이벤트·댓글 화면에 <b>[관리자삭제]</b> 버튼이 나타납니다(이 기기에서 관리자 잠금이 해제된 동안).
       바로 그 자리에서 어떤 콘텐츠든 삭제/숨김할 수 있어요.</p>
-      <div style="display:flex;gap:10px;margin-top:12px">
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
         <a class="btn btn--sm" href="${url("index.html")}">타임라인</a>
         <a class="btn btn--sm" href="${url("gallery.html")}">갤러리</a>
+        <a class="btn btn--sm" href="${url("import.html")}">📄 엑셀/CSV 대량 등록</a>
       </div>
     </div>
 
