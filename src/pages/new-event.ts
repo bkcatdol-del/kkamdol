@@ -7,6 +7,8 @@ import { errorText } from "../components/comments";
 import { checkText } from "../lib/validation";
 import { url, toast, notConfiguredNotice, getParam } from "../lib/dom";
 
+const HEARTS = ["💙", "🖤", "❤️", "🩷", "💜", "💚", "💛", "🧡", "🤍", "🩵"];
+
 function prefillDate(): string {
   const d = getParam("date") ?? "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
@@ -28,8 +30,18 @@ async function main() {
         <div><label>날짜</label><input name="event_date" type="date" value="${prefillDate()}" /></div>
         <div><label>닉네임 *</label><input name="nick" maxlength="40" placeholder="작성자" required /></div>
       </div>
+      <label>하트 <span class="hint" style="display:inline">캘린더에 이 하트로 표시돼요</span></label>
+      <div class="heart-pick">
+        ${HEARTS.map(
+          (h, i) =>
+            `<button type="button" class="heart-opt${i === 0 ? " on" : ""}" data-heart="${h}">${h}</button>`
+        ).join("")}
+      </div>
+
       <label>내용</label>
       <textarea name="body" maxlength="5000" placeholder="자세한 기록을 남겨보세요" style="min-height:160px"></textarea>
+      <label>링크 (선택) <span class="hint" style="display:inline">관련 게시물·페이지 주소</span></label>
+      <input name="link" type="url" maxlength="500" placeholder="https://..." />
       <label>비밀번호 * <span class="hint" style="display:inline">나중에 수정·삭제할 때 필요해요</span></label>
       <input name="password" type="password" maxlength="72" placeholder="4자 이상" required />
       <div style="margin-top:20px;display:flex;gap:10px">
@@ -39,6 +51,17 @@ async function main() {
     </form>`;
 
   const form = content.querySelector("form") as HTMLFormElement;
+
+  // Heart picker selection.
+  let heart = HEARTS[0];
+  content.querySelectorAll(".heart-opt").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      heart = (btn as HTMLElement).dataset.heart!;
+      content.querySelectorAll(".heart-opt").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+    })
+  );
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
@@ -47,6 +70,7 @@ async function main() {
     const nick = String(fd.get("nick") ?? "").trim();
     const password = String(fd.get("password") ?? "");
     const eventDate = String(fd.get("event_date") ?? "") || null;
+    const link = String(fd.get("link") ?? "").trim();
 
     const tErr = checkText(title, 1, 200, "제목");
     if (tErr) return toast(tErr, "err");
@@ -59,7 +83,7 @@ async function main() {
     const btn = form.querySelector("button") as HTMLButtonElement;
     btn.disabled = true;
     try {
-      const id = await createEvent(code, { title, body, eventDate, nick, password });
+      const id = await createEvent(code, { title, body, eventDate, nick, password, heart, link });
       document.dispatchEvent(new Event("kkamdol:unlock-changed"));
       toast("기록했어요 💙");
       setTimeout(() => (location.href = url(`event.html?id=${id}`)), 700);

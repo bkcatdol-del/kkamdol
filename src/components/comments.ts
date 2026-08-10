@@ -2,6 +2,7 @@ import {
   listComments,
   createComment,
   deleteComment,
+  updateComment,
   reportContent,
   adminDelete,
   type CommentRow,
@@ -36,7 +37,7 @@ export async function mountComments(container: HTMLElement, target: Target): Pro
   async function reload() {
     const rows = await listComments(target).catch(() => [] as CommentRow[]);
     if (rows.length === 0) {
-      listEl.innerHTML = `<p class="hint">아직 댓글이 없어요. 첫 댓글을 남겨보세요 💙</p>`;
+      listEl.innerHTML = `<p class="hint">🖤 아직 댓글이 없어요. 첫 댓글을 남겨보세요 💙</p>`;
       return;
     }
     listEl.innerHTML = "";
@@ -86,10 +87,20 @@ function renderComment(c: CommentRow, reload: () => Promise<void>): HTMLElement 
     </div>
     <div class="text">${escapeMultiline(c.body)}</div>
     <div class="actions">
+      <button data-act="edit">수정</button>
       <button data-act="del">삭제</button>
       <button data-act="report">신고</button>
       ${isAdmin ? `<button data-act="admin-del" style="color:var(--danger)">관리자 삭제</button>` : ""}
     </div>`;
+
+  el.querySelector('[data-act="edit"]')?.addEventListener("click", async () => {
+    const next = prompt("댓글을 수정하세요", c.body);
+    if (next === null || next.trim() === "" || next === c.body) return;
+    const pw = prompt("이 댓글의 비밀번호를 입력하세요");
+    if (!pw) return;
+    const ok = await updateComment(c.id, pw, next.trim()).catch(() => false);
+    ok ? (toast("수정했어요"), reload()) : toast("비밀번호가 일치하지 않아요.", "err");
+  });
 
   el.querySelector('[data-act="del"]')?.addEventListener("click", async () => {
     const pw = prompt("이 댓글의 비밀번호를 입력하세요");

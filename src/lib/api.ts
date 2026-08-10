@@ -8,6 +8,8 @@ export interface EventRow {
   body: string | null;
   event_date: string | null;
   author_nick: string;
+  heart: string;
+  link_url: string | null;
   status: string;
   report_count: number;
   created_at: string;
@@ -94,7 +96,15 @@ export async function listComments(
 // ---- Writes (approval-code gated; server re-verifies) ---------------------
 export async function createEvent(
   code: string,
-  input: { title: string; body: string; eventDate: string | null; nick: string; password: string }
+  input: {
+    title: string;
+    body: string;
+    eventDate: string | null;
+    nick: string;
+    password: string;
+    heart: string;
+    link: string;
+  }
 ): Promise<string> {
   const { data, error } = await supabase.rpc("create_event", {
     p_code: code,
@@ -103,6 +113,8 @@ export async function createEvent(
     p_event_date: input.eventDate,
     p_nick: input.nick,
     p_password: input.password,
+    p_heart: input.heart,
+    p_link: input.link,
   });
   if (error) throw error;
   return data as string;
@@ -173,6 +185,22 @@ export async function updateComment(id: string, password: string, body: string):
 
 export async function deleteEvent(id: string, password: string): Promise<boolean> {
   const { data, error } = await supabase.rpc("delete_event", { p_id: id, p_password: password });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function updateEvent(
+  id: string,
+  password: string,
+  input: { title: string; body: string; eventDate: string | null }
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("update_event", {
+    p_id: id,
+    p_password: password,
+    p_title: input.title,
+    p_body: input.body,
+    p_event_date: input.eventDate,
+  });
   if (error) throw error;
   return data === true;
 }

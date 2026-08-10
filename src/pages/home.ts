@@ -46,7 +46,7 @@ async function main() {
       card.style.display = "block";
       card.style.color = "inherit";
       card.innerHTML = `
-        <h3>${escapeHTML(ev.title)}</h3>
+        <h3>${escapeHTML(ev.heart || "💙")} ${escapeHTML(ev.title)}</h3>
         <div class="meta">
           <span>🗓 ${ev.event_date ? formatDate(ev.event_date) : formatDate(ev.created_at)}</span>
           <span>· ${escapeHTML(ev.author_nick)}</span>

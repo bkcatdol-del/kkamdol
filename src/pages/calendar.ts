@@ -67,8 +67,8 @@ async function main() {
             (ev) => `
         <a class="event-card glass" style="display:block;color:inherit;padding:14px 16px"
            href="${url(`event.html?id=${ev.id}`)}">
-          <h3 style="margin:0 0 4px;font-size:16px">${escapeHTML(ev.title)}</h3>
-          <div class="meta" style="color:var(--text-faint);font-size:13px">${escapeHTML(ev.author_nick)}</div>
+          <h3 style="margin:0 0 4px;font-size:16px">${escapeHTML(ev.heart || "💙")} ${escapeHTML(ev.title)}</h3>
+          <div class="meta" style="color:var(--text-faint);font-size:13px">${escapeHTML(ev.author_nick)} · 눌러서 기록 보기 →</div>
         </a>`
           )
           .join("")
@@ -95,7 +95,9 @@ async function main() {
     for (let i = 0; i < startPad; i++) cells.push(`<div class="cal-cell empty-cell"></div>`);
     for (let d = 1; d <= daysInMonth; d++) {
       const key = `${year}-${pad(month + 1)}-${pad(d)}`;
-      const count = byDay.get(key)?.length ?? 0;
+      const evs = byDay.get(key) ?? [];
+      const count = evs.length;
+      const hearts = evs.slice(0, 3).map((e) => e.heart || "💙").join("");
       const cls = [
         "cal-cell",
         count ? "has" : "",
@@ -107,7 +109,7 @@ async function main() {
       cells.push(`
         <button class="${cls}" data-key="${key}">
           <span class="d">${d}</span>
-          ${count ? `<span class="dot" title="${count}건">${count > 3 ? `💙 ${count}` : "💙".repeat(count)}</span>` : ""}
+          ${count ? `<span class="dot" title="${count}건">${count > 3 ? `${hearts}+${count - 3}` : hearts}</span>` : ""}
         </button>`);
     }
     gridEl.innerHTML = cells.join("");
