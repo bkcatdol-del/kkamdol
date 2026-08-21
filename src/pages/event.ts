@@ -48,6 +48,7 @@ async function main() {
       }
       <div id="ev-media" class="grid" style="margin-top:22px"></div>
       <div class="actions" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn btn--sm" href="${url(`upload.html?event=${ev.id}`)}">🖼 이미지 추가</a>
         <button class="btn btn--sm" id="ev-edit">수정(작성자)</button>
         <button class="btn btn--sm" id="ev-report">신고</button>
         <button class="btn btn--sm btn--danger" id="ev-del">삭제(작성자)</button>
