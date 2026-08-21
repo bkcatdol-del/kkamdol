@@ -1,6 +1,8 @@
 import "../styles/main.css";
 import { mountChrome } from "../components/layout";
-import { createEvent } from "../lib/api";
+import { createEvent, createMedia } from "../lib/api";
+import { uploadFile } from "../lib/upload";
+import { validateFile } from "../lib/validation";
 import { isConfigured } from "../lib/supabase";
 import { requireWriterCode } from "../components/access-gate";
 import { errorText } from "../components/comments";
@@ -42,6 +44,8 @@ async function main() {
       <textarea name="body" maxlength="5000" placeholder="자세한 기록을 남겨보세요" style="min-height:160px"></textarea>
       <label>링크 (선택) <span class="hint" style="display:inline">관련 게시물·페이지 주소</span></label>
       <input name="link" type="url" maxlength="500" placeholder="https://..." />
+      <label>사진 첨부 (선택) <span class="hint" style="display:inline">여러 장 가능 · 이 기록에 바로 붙어요</span></label>
+      <input name="files" type="file" accept="image/*,video/mp4,video/webm" multiple />
       <label>비밀번호 * <span class="hint" style="display:inline">나중에 수정·삭제할 때 필요해요</span></label>
       <input name="password" type="password" maxlength="72" placeholder="4자 이상" required />
       <div style="margin-top:20px;display:flex;gap:10px">
@@ -78,6 +82,14 @@ async function main() {
     if (!nick) return toast("닉네임을 입력해 주세요.", "err");
     if (password.length < 4) return toast("비밀번호는 4자 이상이어야 해요.", "err");
 
+    // Photos to attach — validate up front so we don't create the event then fail.
+    const fileInput = form.elements.namedItem("files") as HTMLInputElement;
+    const files = Array.from(fileInput.files ?? []);
+    for (const f of files) {
+      const v = validateFile(f);
+      if (!v.ok) return toast(`${f.name}: ${v.error}`, "err");
+    }
+
     const code = await requireWriterCode();
     if (!code) return;
 
@@ -85,12 +97,33 @@ async function main() {
     btn.disabled = true;
     try {
       const id = await createEvent(code, { title, body, eventDate, nick, password, heart, link });
+
+      // Upload attached photos and link them to the new event.
+      let done = 0;
+      for (const f of files) {
+        btn.textContent = `사진 업로드… ${done + 1}/${files.length}`;
+        const up = await uploadFile(f);
+        await createMedia(code, {
+          eventId: id,
+          kind: up.kind,
+          storagePath: up.storagePath,
+          embedUrl: null,
+          mimeType: up.mimeType,
+          byteSize: up.byteSize,
+          caption: "",
+          nick,
+          password,
+        });
+        done++;
+      }
+
       document.dispatchEvent(new Event("kkamdol:unlock-changed"));
-      toast("기록했어요 💙");
+      toast(files.length ? `기록 + 사진 ${files.length}장 완료 💙` : "기록했어요 💙");
       setTimeout(() => (location.href = url(`event.html?id=${id}`)), 700);
     } catch (err) {
       toast(errorText(err), "err");
       btn.disabled = false;
+      btn.textContent = "기록 남기기";
     }
   });
 }
