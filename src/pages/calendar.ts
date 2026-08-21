@@ -44,6 +44,11 @@ async function main() {
     month = Number(last.slice(5, 7)) - 1;
   }
 
+  // Years that have records (+ current year), newest first — for the year jump.
+  const years = [...new Set(allKeys.map((k) => Number(k.slice(0, 4))))];
+  if (!years.includes(today.getFullYear())) years.push(today.getFullYear());
+  years.sort((a, b) => b - a);
+
   content.innerHTML = `
     <div style="margin-bottom:16px">
       <input id="cal-search" type="search" placeholder="🔍 전체 검색 (제목·내용·유형)" />
@@ -56,7 +61,7 @@ async function main() {
             <button class="btn btn--sm" id="prev-year" title="이전 해">«</button>
             <button class="btn btn--sm" id="prev" title="이전 달">‹</button>
           </div>
-          <div class="cal-title" id="cal-title"></div>
+          <div class="cal-title" id="cal-title" style="position:relative"></div>
           <div style="display:flex;gap:6px">
             <button class="btn btn--sm" id="next" title="다음 달">›</button>
             <button class="btn btn--sm" id="next-year" title="다음 해">»</button>
@@ -106,8 +111,56 @@ async function main() {
       </div>`;
   }
 
+  function openYearMenu() {
+    const existing = content.querySelector("#year-menu");
+    if (existing) {
+      existing.remove();
+      return;
+    }
+    const menu = document.createElement("div");
+    menu.id = "year-menu";
+    menu.className = "glass";
+    menu.style.cssText =
+      "position:absolute;left:50%;transform:translateX(-50%);top:100%;z-index:60;margin-top:8px;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:130px;max-height:260px;overflow:auto";
+    menu.innerHTML = years
+      .map(
+        (y) =>
+          `<button class="btn btn--sm ${y === year ? "btn--primary" : "btn--ghost"}" data-y="${y}">${y}년</button>`
+      )
+      .join("");
+    titleEl.appendChild(menu);
+    menu.querySelectorAll("[data-y]").forEach((b) =>
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        year = Number((b as HTMLElement).dataset.y);
+        const monthsInYear = allKeys
+          .filter((k) => k.startsWith(year + "-"))
+          .map((k) => Number(k.slice(5, 7)));
+        if (monthsInYear.length) month = Math.max(...monthsInYear) - 1;
+        menu.remove();
+        renderGrid();
+      })
+    );
+    setTimeout(
+      () =>
+        document.addEventListener(
+          "click",
+          function close() {
+            menu.remove();
+            document.removeEventListener("click", close);
+          },
+          { once: true }
+        ),
+      0
+    );
+  }
+
   function renderGrid() {
-    titleEl.textContent = `${year}년 ${month + 1}월`;
+    titleEl.innerHTML = `<button id="year-btn" style="font:inherit;font-size:18px;font-weight:800;background:transparent;border:0;color:var(--text);cursor:pointer;padding:2px 4px;border-radius:8px">${year}년 ▾</button> <span style="font-weight:800">${month + 1}월</span>`;
+    titleEl.querySelector("#year-btn")!.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openYearMenu();
+    });
     const startPad = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayKey = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
